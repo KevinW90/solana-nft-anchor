@@ -8,6 +8,7 @@ import {
   findMetadataPda,
   mplTokenMetadata,
   MPL_TOKEN_METADATA_PROGRAM_ID,
+  setAndVerifyCollection,
 } from "@metaplex-foundation/mpl-token-metadata";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { publicKey } from "@metaplex-foundation/umi";
@@ -21,8 +22,7 @@ describe("solana-nft-anchor", async () => {
   // Configured the client to use the devnet cluster.
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
-  const program = anchor.workspace
-    .SolanaNftAnchor as Program<SolanaNftAnchor>;
+  const program = anchor.workspace.SolanaNftAnchor as Program<SolanaNftAnchor>;
 
   const signer = provider.wallet;
 

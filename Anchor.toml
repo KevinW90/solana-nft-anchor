@@ -2,14 +2,14 @@
 seeds = false
 skip-lint = false
 [programs.localnet]
-solana_nft_anchor = "9TEtkW972r8AVyRmQzgyMz8GpG7WJxJ2ZUVZnjFNJgWM"
+solana_nft_anchor = "BZC28tbriJNMVB1WpAsiAywUUQUCm7q6JfbzeTfXXgtz"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
 cluster = "devnet"
-wallet = "/home/jimii/.config/solana/id.json"
+wallet = "/home/grumpy-wizard/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

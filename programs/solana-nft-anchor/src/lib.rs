@@ -12,13 +12,14 @@ use mpl_token_metadata::{
     state::DataV2,
 };
 
-declare_id!("9TEtkW972r8AVyRmQzgyMz8GpG7WJxJ2ZUVZnjFNJgWM"); // shouldn't be similar to mine
+declare_id!("BZC28tbriJNMVB1WpAsiAywUUQUCm7q6JfbzeTfXXgtz"); // shouldn't be similar to mine
 
 #[program]
 pub mod solana_nft_anchor {
 
     use super::*;
 
+    // init_nft - creates a new NFT
     pub fn init_nft(
         ctx: Context<InitNFT>,
         name: String,  
@@ -87,9 +88,42 @@ pub mod solana_nft_anchor {
 
 #[derive(Accounts)]
 pub struct InitNFT<'info> {
+    // We can mark the account as a signer using the `signer` attribute
+    // We can mark the account as mutable using the `mut` attribute
+    //   - This allows us to modify the account (paying fees)
+
+    // Anchor constraints
+    // #[account(<constraints>)]
+    //   - These are built-in features that Anchor provides to simplify common
+    //     security checks; mutable accounts, signer accounts, etc.
+
+    // The check below is crucial when using the AccountInfo wrapper to ensure
+    //   we are passing in the correct account
     /// CHECK: ok, we are passing in this account ourselves
     #[account(mut, signer)]
     pub signer: AccountInfo<'info>,
+    
+    
+    // MINT ACCOUNT
+    // contains details about the token such as mint authority, freeze authority,
+    //   total supply …etc.
+    // init - wrapper around `system_instruction::create_account()`
+    //   - allocate space for the account
+    //   - transfer lamports for rent (fees)
+    //   - assigning account; link to the appropriate owning program
+    // payer = signer
+    //   - used to pay the rent to store data
+    //   - incentivizes validators
+    //   - without rent, data is pruned from blockchain
+    // mint::decimals = 0
+    //   - decimals for NFT
+    //   - cannot have a fraction of an NFT
+    // mint::authority = signer.key()
+    //   - authority to mint new tokens
+    //   - signer is the authority
+    // mint::freeze_authority = signer.key()
+    //   - authority to freeze tokens
+    //   - signer is the authority
     #[account(
         init,
         payer = signer,
@@ -98,6 +132,14 @@ pub struct InitNFT<'info> {
         mint::freeze_authority = signer.key(),
     )]
     pub mint: Account<'info, Mint>,
+    
+    
+    // ASSOCIATED TOKEN ACCOUNT
+    // a special slot for storing a specific type of token
+    // init_if_needed - creates an account in the wallet if no token account exists
+    // payer - account that pays for the account creation; signer
+    // associated_token::mint = mint - the mint account that the token is associated with
+    // associated_token::authority = signer - the authority to transfer tokens
     #[account(
         init_if_needed,
         payer = signer,
@@ -105,12 +147,20 @@ pub struct InitNFT<'info> {
         associated_token::authority = signer
     )]
     pub associated_token_account: Account<'info, TokenAccount>,
+    
+    
+    
+    
     /// CHECK - address
     #[account(
         mut,
         address=find_metadata_account(&mint.key()).0,
     )]
     pub metadata_account: AccountInfo<'info>, 
+    
+    
+    
+    
     /// CHECK: address
     #[account(
         mut,
@@ -118,9 +168,18 @@ pub struct InitNFT<'info> {
     )]
     pub master_edition_account: AccountInfo<'info>,
 
+
+    // PROGRAMS
+
+    // Token program
     pub token_program: Program<'info, Token>,
+    // handles creation of our ATA (associated token account)
     pub associated_token_program: Program<'info, AssociatedToken>,
+    // handles creation of our metadata account
     pub token_metadata_program: Program<'info, Metadata>,
+    // associated token program may need to create a new ATA
+    // responsible for creating all accounts
     pub system_program: Program<'info, System>,
+    // Solana requires rent-exempt (2 years of SOL deposit)
     pub rent: Sysvar<'info, Rent>,
 }
